@@ -2,174 +2,92 @@
 
 ## 🚀 Installation
 
-1. **Install `torch` & `torchaudio`**  
+1. Install `ffmpeg` (needs `Chocolatey`) from **Admin Powershell**
+```bash
+choco install ffmpeg -y
+```
+
+2. Activate virtualenv, then install `torch` & `torchaudio`
 Find the right command on the [PyTorch website](https://pytorch.org/).
 
 
-2. **Install ffmpeg**  
-```bash
-pip install ffmpeg
-```
-
-3. **Install RAVE**
+3. Install **RAVE**
 ```bash
 pip install -r requirements.txt
 ```
 
-<!-- Detailed instructions to setup a training station for this project are available [here](docs/training_setup.md). -->
+## 🎛️ Usage
 
-## Colab
+Training a RAVE model involves three steps: **dataset preparation, training, and export**.
 
-A colab to train RAVEv2 is now available thanks to [hexorcismos](https://github.com/moiseshorta) !
-[![colab_badge](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1ih-gv1iHEZNuGhHPvCHrleLNXvooQMvI?usp=sharing)
+### 📂 Dataset Preparation  
 
-## Usage
+1. Prepare your audio dataset in a folder.
+   - Use **at least 1-3 hour of high-quality audio**.  
+   - **Balanced diversity** is key: too much variation makes training harder, too little limits generalization.  
+   - Normalize or compress audio if loudness varies significantly.
 
-Training a RAVE model usually involves 3 separate steps, namely _dataset preparation_, _training_ and _export_.
 
-### Dataset preparation
-
-You can know prepare a dataset using two methods: regular and lazy. Lazy preprocessing allows RAVE to be trained directly on the raw files (i.e. mp3, ogg), without converting them first. **Warning**: lazy dataset loading will increase your CPU load by a large margin during training, especially on Windows. This can however be useful when training on large audio corpus which would not fit on a hard drive when uncompressed. In any case, prepare your dataset using
-
+2. Resample (if needed)
+If your dataset contains **multiple sample rates**, first `cd` into your audio folder and run:
 ```bash
-rave preprocess --input_path /audio/folder --output_path /dataset/path --channels X (--lazy)
+cd /path/to/audio/folder
+resample --sr TARGET_SAMPLING_RATE --augment
+```
+⚠️ This will convert files to **16-bit WAV, mono, 44.1 kHz**.
+
+
+3. Preprocess your dataset
+Once your audio is ready, preprocess it:
+```bash
+python ./scripts/preprocess.py --input_path /audio/folder --output_path /dataset/path --channels X (--lazy)
 ```
 
-### Training
+- Add `--lazy` for very large datasets.
+- Use `--channels 1` to use in RAVE VST.
 
-RAVEv2 has many different configurations. The improved version of the v1 is called `v2`, and can therefore be trained with
 
+### 🎯 Training
+
+RAVEv2 supports multiple configurations. To train the v2 model, run:
 ```bash
-rave train --config v2 --db_path /dataset/path --out_path /model/out --name give_a_name --channels X
+python ./scripts/train.py --config v2 --db_path /dataset/path --out_path /model/out --name give_a_name --channels X
 ```
 
-We also provide a discrete configuration, similar to SoundStream or EnCodec
+#### 🎨 Model Architectures
+- **v1**: Original continuous model.
+- **v2**: Improved continuous model (faster, higher quality, 16GB GPU)
+- **v2_small**: Optimized for timbre transfer (8GB GPU)
+- **v2_nopqmf**: v2 without pqmf in generator (experimental, for bending purposes, 16GB GPU)
+- **v3**: Real style transfer with Snake activation (32GB GPU)
+- **discrete**: Discrete model (similar to SoundStream/EnCodec, 18GB GPU)
+- **onnx**: Optimized for ONNX export (6GB GPU)
+- **raspberry**: Lightweight model for Raspberry Pi 4 (5GB GPU)
 
+#### 🛠️ Regularization (v2 only)
+- **default**: Use this one before any further experiment!
+- **wasserstein**: Better reconstruction results, at the price of a more messy latent space.
+- **spherical**: Enforces the latent space to be distributed on a sphere. It is experimental, do not try that first!
+
+#### 🎛️ Discriminator
+- **spectral_discriminator**: Use the MultiScale discriminator from EnCodec.
+
+#### 🎭 Others
+- **causal**: Reduces the perceived latency of the model, at the price of a lower reconstruction quality.
+- **noise**: Better for learning sounds with important noisy components.
+- **hybrid**: Enable mel-spectrogram input, may be useful for learning on voice.
+
+#### 🎨 Augmentations
+- **mute**: Randomly mutes data batches (default prob: 0.1).
+- **compress**: Randomly compresses the waveform.
+- **gain**: Applies a random gain to the waveform (default range: [-6, 3]).
+
+Configurations can be combined:
 ```bash
-rave train --config discrete ...
+python ./scripts/train.py --config v2 --config consal --augment compress...
 ```
 
-By default, RAVE is built with non-causal convolutions. If you want to make the model causal (hence lowering the overall latency of the model), you can use the causal mode
 
-```bash
-rave train --config discrete --config causal ...
-```
-
-New in 2.3, data augmentations are also available to improve the model's generalization in low data regimes. You can add data augmentation by adding augmentation configuration files with the `--augment` keyword
-
-```bash
-rave train --config v2 --augment mute --augment compress
-```
-
-Many other configuration files are available in `rave/configs` and can be combined. Here is a list of all the available configurations & augmentations :
-
-<table>
-<thead>
-<tr>
-<th>Type</th>
-<th>Name</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-
-<tr>
-<td rowspan=8>Architecture</td>
-<td>v1</td>
-<td>Original continuous model (minimum GPU memory : 8Go)</td>
-</tr>
-
-<tr>
-<td>v2</td>
-<td>Improved continuous model (faster, higher quality) (minimum GPU memory : 16Go)</td>
-</tr>
-
-<tr>
-<td>v2_small</td>
-<td>v2 with a smaller receptive field, adpated adversarial training, and noise generator, adapted for timbre transfer for stationary signals (minimum GPU memory : 8Go)</td>
-</tr>
-
-<tr>
-<td>v2_nopqmf</td>
-<td>(experimental) v2 without pqmf in generator (more efficient for bending purposes) (minimum GPU memory : 16Go)</td>
-</tr>
-
-<tr>
-<td>v3</td>
-<td>v2 with Snake activation, descript discriminator and Adaptive Instance Normalization for real style transfer (minimum GPU memory : 32Go)</td>
-</tr>
-
-<tr>
-<td>discrete</td>
-<td>Discrete model (similar to SoundStream or EnCodec) (minimum GPU memory : 18Go)</td>
-</tr>
-
-<tr>
-<td>onnx</td>
-<td>Noiseless v1 configuration for onnx usage (minimum GPU memory : 6Go)</td>
-</tr>
-
-<tr>
-<td>raspberry</td>
-<td>Lightweight configuration compatible with realtime RaspberryPi 4 inference (minimum GPU memory : 5Go)</td>
-</tr>
-
-<tr>
-<td rowspan=3>Regularization (v2 only)</td>
-<td>default</td>
-<td>Variational Auto Encoder objective (ELBO)</td>
-</tr>
-
-<tr>
-<td>wasserstein</td>
-<td>Wasserstein Auto Encoder objective (MMD)</td>
-</tr>
-
-<tr>
-<td>spherical</td>
-<td>Spherical Auto Encoder objective</td>
-</tr>
-
-<tr>
-<td rowspan=1>Discriminator</td>
-<td>spectral_discriminator</td>
-<td>Use the MultiScale discriminator from EnCodec.</td>
-</tr>
-
-<tr>
-<td rowspan=3>Others</td>
-<td>causal</td>
-<td>Use causal convolutions</td>
-</tr>
-
-<tr>
-<td>noise</td>
-<td>Enables noise synthesizer V2</td>
-</tr>
-
-<tr>
-<td>hybrid</td>
-<td>Enable mel-spectrogram input</td>
-</tr>
-
-<tr>
-<td rowspan=3>Augmentations</td>
-<td>mute</td>
-<td>Randomly mutes data batches (default prob : 0.1). Enforces the model to learn silence</td>
-</tr>
-
-<tr>
-<td>compress</td>
-<td>Randomly compresses the waveform (equivalent to light non-linear amplification of batches)</td>
-</tr>
-
-<tr>
-<td>gain</td>
-<td>Applies a random gain to waveform (default range : [-6, 3]) </td>
-</tr>
-
-</tbody>
-</table>
 
 ### Export
 
