@@ -34,7 +34,7 @@ If your dataset contains **multiple sample rates**, first `cd` into your audio f
 cd /path/to/audio/folder
 resample --sr TARGET_SAMPLING_RATE --augment
 ```
-⚠️ This will convert files to **16-bit WAV, mono, 44.1 kHz**.
+⚠️ This will convert files to **16-bit WAV, mono, TARGET_SAMPLING_RATE kHz**.
 
 
 3. Preprocess your dataset
@@ -43,8 +43,8 @@ Once your audio is ready, preprocess it:
 python ./scripts/preprocess.py --input_path /audio/folder --output_path /dataset/path --channels X (--lazy)
 ```
 
-- Add `--lazy` for very large datasets.
 - Use `--channels 1` to use in RAVE VST.
+- Add `--lazy` for very large datasets.
 
 
 ### 🎯 Training
