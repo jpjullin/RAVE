@@ -1,44 +1,19 @@
 ![rave_logo](docs/rave.png)
 
-# RAVE: Realtime Audio Variational autoEncoder
+## 🚀 Installation
 
-Official implementation of _RAVE: A variational autoencoder for fast and high-quality neural audio synthesis_ ([article link](https://arxiv.org/abs/2111.05011)) by Antoine Caillon and Philippe Esling.
+1. **Install `torch` & `torchaudio`**  
+Find the right command on the [PyTorch website](https://pytorch.org/).
 
-If you use RAVE as a part of a music performance or installation, be sure to cite either this repository or the article !
 
-If you want to share / discuss / ask things about RAVE you can do so in our [discord server](https://discord.gg/dhX73sPTBb) !
-
-Please check the FAQ before posting an issue!
-
-**RAVE VST** RAVE VST for Windows, Mac and Linux is available as beta on the [corresponding Forum IRCAM webpage](https://forum.ircam.fr/projects/detail/rave-vst/). For problems, please write an issue here or [on the Forum IRCAM discussion page](https://discussion.forum.ircam.fr/c/rave-vst/651).
-
-**Tutorials** : new tutorials are available on the Forum IRCAM webpage, and video versions are coming soon!
-- [Tutorial: Neural Synthesis in a DAW with RAVE](https://forum.ircam.fr/article/detail/neural-synthesis-in-a-daw-with-rave/)
-- [Tutorial: Neural Synthesis in Max 8 with RAVE](https://forum.ircam.fr/article/detail/tutorial-neural-synthesis-in-max-8-with-rave/)
-- [Tutorial: Training RAVE models on custom data](https://forum.ircam.fr/article/detail/training-rave-models-on-custom-data/)
-
-## Previous versions
-
-The original implementation of the RAVE model can be restored using
-
+2. **Install ffmpeg**  
 ```bash
-git checkout v1
+pip install ffmpeg
 ```
 
-## Installation
-
-Install RAVE using
-
+3. **Install RAVE**
 ```bash
-pip install acids-rave
-```
-
-**Warning** It is strongly advised to install `torch` and `torchaudio` before `acids-rave`, so you can choose the appropriate version of torch on the [library website](http://www.pytorch.org). For future compatibility with new devices (and modern Python environments), `rave-acids` does not enforce torch==1.13 anymore.
-
-You will need **ffmpeg** on your computer. You can install it locally inside your virtual environment using
-
-```bash
-conda install ffmpeg
+pip install -r requirements.txt
 ```
 
 <!-- Detailed instructions to setup a training station for this project are available [here](docs/training_setup.md). -->
