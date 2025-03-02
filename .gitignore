@@ -1,3 +1,5 @@
+*.idea
+
 *pycache*
 *DS_Store
 lightning_logs/
