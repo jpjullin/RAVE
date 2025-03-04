@@ -34,7 +34,7 @@ If your dataset contains **multiple sample rates**, first `cd` into your audio f
 cd /path/to/audio/folder
 resample --sr TARGET_SAMPLING_RATE --augment
 ```
-⚠️ This will convert files to **16-bit WAV, mono, TARGET_SAMPLING_RATE kHz**.
+⚠️ This will convert files to **16-bit WAV, mono, TARGET_SAMPLING_RATE Hz**.
 
 
 3. Preprocess your dataset
